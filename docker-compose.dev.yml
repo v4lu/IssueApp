@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:alpine
+    environment:
+      POSTGRES_DB: pg
+      POSTGRES_USER: pg
+      POSTGRES_PASSWORD: pg
+    ports:
+      - '5432:5432'
+    volumes:
+      - ./data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
+
+volumes:
+  data:
