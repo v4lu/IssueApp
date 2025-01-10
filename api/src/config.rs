@@ -8,6 +8,7 @@ pub struct Config {
     pub database_url: String,
     pub github_client_id: String,
     pub github_client_secret: String,
+    pub github_redirect_url: String,
 }
 
 impl Config {
@@ -33,11 +34,16 @@ impl Config {
             )
         })?;
 
+        let github_redirect_url = env::var("GITHUB_REDIRECT_URL").map_err(|_| {
+            CustomError::ConfigError("GITHUB_REDIRECT_URL environment variable not set".to_string())
+        })?;
+
         Ok(Config {
             port,
             database_url,
             github_client_id,
             github_client_secret,
+            github_redirect_url,
         })
     }
 }

@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     errors::CustomError,
     models::auth::{LoginRequest, RegisterRequest},
-    utils::context::get_context_user_id,
+    utils::{context::get_context_user_id, urls::extract_query_params_code},
 };
 
 pub async fn register(
@@ -61,20 +61,16 @@ struct GhResponse {
 }
 
 pub async fn init_github(state: web::Data<AppState>) -> Result<HttpResponse, CustomError> {
-    let gh_url = state.oauth_service.init_github_oauth().await;
+    let gh_url = state.oauth_service.init_github_link().await;
     Ok(HttpResponse::Ok().json(GhResponse { url: gh_url }))
 }
 
-pub async fn github_callback(req: HttpRequest) -> Result<HttpResponse, CustomError> {
-    let code = req
-        .query_string()
-        .split('&')
-        .find(|param| param.starts_with("code="))
-        .map(|code| code.replace("code=", ""))
-        .ok_or(CustomError::InternalServerError)?;
-
-    log::info!("Github callback code: {}", code);
-    let redirect_url = format!("http://localhost:3000?code={}", code);
+pub async fn github_callback(
+    req: HttpRequest,
+    state: web::Data<AppState>,
+) -> Result<HttpResponse, CustomError> {
+    let code = extract_query_params_code(req, "code".into())?;
+    let redirect_url = format!("{}?code={}", state.config.github_redirect_url, code);
 
     Ok(HttpResponse::Found()
         .append_header(("Location", redirect_url))
@@ -85,13 +81,7 @@ pub async fn login_with_github(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomError> {
-    let code = req
-        .query_string()
-        .split('&')
-        .find(|param| param.starts_with("code="))
-        .map(|code| code.replace("code=", ""))
-        .ok_or(CustomError::InternalServerError)?;
-
+    let code = extract_query_params_code(req, "code".into())?;
     let user_res = state.oauth_service.handle_github_callback(code).await?;
     Ok(HttpResponse::Ok().json(user_res))
 }
