@@ -17,7 +17,7 @@
 </script>
 
 <Header authToken={data.accessToken} />
-<div class="grid h-[calc(100dvh-65px)] flex-1 bg-background-muted lg:grid-cols-[250px,1fr]">
+<div class="grid h-[calc(100dvh-75px)] flex-1 bg-background-muted lg:grid-cols-[250px,1fr]">
 	{#if showSettingsSidebar}
 		<SettingsSidebar path={data.path} />
 	{:else}

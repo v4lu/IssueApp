@@ -6,6 +6,9 @@ export type User = {
 	created_at: string;
 	updated_at: string;
 	last_login_at: string | null;
+	avatar_url: string | null;
+	github_id: string | null;
+	github_url: string | null;
 };
 
 export type UserPreference = {

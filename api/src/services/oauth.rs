@@ -9,8 +9,9 @@ use crate::{
     models::{
         auth::{CreateGithubUser, UpdateGithubUser, User, UserGithubResponse},
         github::{AccessTokenResponse, UserEmail, UserInfo},
+        user_preferences::UserPreferenceRequest,
     },
-    repositories::user::UserRepository,
+    repositories::{user::UserRepository, user_preferences::UserPreferencesRepository},
 };
 
 use super::token::TokenService;
@@ -20,6 +21,7 @@ pub struct OauthService {
     client_secret: String,
     client_id: String,
     user_repo: UserRepository,
+    user_preferences_repo: UserPreferencesRepository,
     token_service: Arc<TokenService>,
 }
 
@@ -44,6 +46,7 @@ impl OauthService {
             oauth_client,
             client_id: config.github_client_id.clone(),
             client_secret: config.github_client_secret.clone(),
+            user_preferences_repo: UserPreferencesRepository::new(pool.clone()),
             user_repo: UserRepository::new(pool),
             token_service,
         })
@@ -131,10 +134,18 @@ impl OauthService {
                     avatar_url: Some(user_info.avatar_url.clone()),
                 };
 
-                self.user_repo
+                let user = self
+                    .user_repo
                     .insert_github_user(create_user_data)
                     .await
-                    .map_err(|e| CustomError::DatabaseError(e.to_string()))
+                    .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
+
+                self.user_preferences_repo
+                    .create_user_preference(UserPreferenceRequest { user_id: user.id })
+                    .await
+                    .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
+
+                Ok(user)
             }
         }
     }
