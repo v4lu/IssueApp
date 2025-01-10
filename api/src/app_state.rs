@@ -19,6 +19,7 @@ pub struct AppState {
     pub user_preferences_service: Arc<UserPreferencesService>,
     pub comment_service: Arc<CommentService>,
     pub oauth_service: Arc<OauthService>,
+    pub config: Config,
 }
 
 impl AppState {
@@ -39,6 +40,7 @@ impl AppState {
             issue_service: Arc::new(IssueService::new(pool.clone())),
             comment_service: Arc::new(CommentService::new(pool.clone())),
             oauth_service,
+            config: config.clone(),
         })
     }
 }

@@ -7,6 +7,7 @@
 	import { Field } from '$lib/components/ui/field';
 	import { Input } from '$lib/components/ui/input';
 	import { userRegisterSchema } from '$lib/validators/auth.validator.js';
+	import { api } from '$lib/api.js';
 
 	let { data } = $props();
 	let togglePassword = $state(false);
@@ -27,26 +28,44 @@
 	}
 
 	let passwordStrength = $derived(getPasswordStrength($form.password));
+
+	async function initGithubLogin() {
+		const res = await api.get('auth/oauth/github').json<{ url: string }>();
+
+		if (res) {
+			window.location.href = res.url;
+		}
+	}
 </script>
 
-<div class="grid min-h-screen w-full">
-	<div class="flex w-full items-center justify-center p-4 lg:p-8">
-		<div class="w-full max-w-2xl" in:fly={{ y: 20, duration: 600 }} out:fade>
-			<div class="mb-8 space-y-6 text-center lg:hidden">
-				<div class="flex flex-col items-center justify-center">
-					<h2
-						class="bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-3xl font-bold text-transparent"
-					>
-						Join Us
-					</h2>
-					<p class="mt-2 text-muted-foreground">Begin your journey with us today</p>
-				</div>
+<div class="container mx-auto flex h-full flex-1 items-center justify-center px-4 sm:px-6 lg:px-8">
+	<div class="flex w-full justify-center">
+		<div class="w-full max-w-xl" in:fly={{ y: 20, duration: 600 }} out:fade>
+			<div class="mb-8 text-center">
+				<h2
+					class="bg-gradient-to-r from-primary via-primary/90 to-primary/80 bg-clip-text text-4xl font-bold text-transparent"
+				>
+					Create Account
+				</h2>
+				<p class="mt-3 text-muted-foreground">Join our community and start your journey</p>
 			</div>
 
-			<div
-				class="w-full space-y-6 rounded-2xl border border-border/50 bg-card/95 p-8 shadow-2xl ring-1 ring-border/50 backdrop-blur-sm transition-all duration-300 hover:shadow-lg lg:p-12"
-			>
-				<form use:enhance method="POST" action="?/register" class="w-full space-y-6">
+			<div class="rounded-md border border-border bg-card p-12 shadow-xl backdrop-blur-sm">
+				<Button variant="outline" class="w-full" onclick={initGithubLogin}>
+					<Icon icon="mdi:github" class="mr-2 h-5 w-5" />
+					Continue with GitHub
+				</Button>
+
+				<div class="relative my-6">
+					<div class="absolute inset-0 flex items-center">
+						<div class="w-full border-t border-border/50"></div>
+					</div>
+					<div class="relative flex justify-center text-sm">
+						<span class="bg-card px-4 text-muted-foreground">or continue with email</span>
+					</div>
+				</div>
+
+				<form use:enhance method="POST" action="?/register" class="space-y-5">
 					<Field name="Email" error={$errors.email}>
 						<div class="group relative transition-all duration-300">
 							<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -164,31 +183,21 @@
 						disabled={$submitting}
 						isLoading={$submitting}
 						type="submit"
-						class="w-full bg-primary font-semibold text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-primary/25"
+						class="mt-6 w-full bg-primary font-semibold text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 hover:shadow-primary/25"
 						size="lg"
 					>
 						Create account
 					</Button>
 				</form>
 
-				<div class="mt-6">
-					<div class="relative">
-						<div class="absolute inset-0 flex items-center">
-							<div class="w-full border-t border-border/50"></div>
-						</div>
-						<div class="relative flex justify-center text-sm">
-							<span class="bg-card px-4 text-muted-foreground">Already have an account?</span>
-						</div>
-					</div>
-
-					<div class="mt-6 flex justify-center">
-						<a
-							href="/sign-in"
-							class="font-medium text-primary transition-colors duration-300 hover:text-primary/80 hover:underline"
-						>
-							Sign in
-						</a>
-					</div>
+				<div class="mt-6 text-center text-sm">
+					<span class="text-muted-foreground">Already have an account?</span>
+					<a
+						href="/sign-in"
+						class="ml-1 font-medium text-primary transition-colors duration-300 hover:text-primary/80 hover:underline"
+					>
+						Sign in
+					</a>
 				</div>
 			</div>
 		</div>

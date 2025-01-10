@@ -46,7 +46,7 @@
 	]);
 </script>
 
-<header class="flex w-full justify-between bg-background-muted p-4">
+<header class="flex w-full justify-between bg-background-muted p-3">
 	<div class="flex w-full items-center justify-start space-x-2">
 		<a href="/" class=" text-xl font-bold">Sample</a>
 	</div>
