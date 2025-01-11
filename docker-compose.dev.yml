@@ -15,5 +15,12 @@ services:
     ports:
       - '6379:6379'
 
+  gh-api:
+    build:
+      context: gh-api
+      dockerfile: Dockerfile
+    ports:
+      - '9001:9001'
+
 volumes:
   data:

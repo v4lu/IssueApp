@@ -1,0 +1,215 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "A REST API service for managing GitHub repositories and issues",
+        "title": "GitHub APIs",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:9001",
+    "basePath": "/v1",
+    "paths": {
+        "/repos/{owner}/{repo}/issues": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new issue in the specified repository",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "issues"
+                ],
+                "summary": "Create a new issue",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Repository owner",
+                        "name": "owner",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Repository name",
+                        "name": "repo",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Issue details",
+                        "name": "issue",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateIssueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Issue"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.AppError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "errors.AppError": {
+            "type": "object",
+            "properties": {
+                "httpstatus": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "raw": {},
+                "type": {
+                    "$ref": "#/definitions/errors.ErrorType"
+                }
+            }
+        },
+        "errors.ErrorType": {
+            "type": "string",
+            "enum": [
+                "VALIDATION_ERROR",
+                "AUTHENTICATION_ERROR",
+                "AUTHORIZATION_ERROR",
+                "NOT_FOUND",
+                "GITHUB_API_ERROR",
+                "INTERNAL_ERROR"
+            ],
+            "x-enum-varnames": [
+                "ErrorTypeValidation",
+                "ErrorTypeAuthentication",
+                "ErrorTypeAuthorization",
+                "ErrorTypeNotFound",
+                "ErrorTypeGitHubAPI",
+                "ErrorTypeInternal"
+            ]
+        },
+        "models.CreateIssueRequest": {
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "body": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "owner": {
+                    "type": "string"
+                },
+                "repoName": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Issue": {
+            "description": "GitHub issue information",
+            "type": "object",
+            "properties": {
+                "assignees": {
+                    "description": "List of assignees",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "body": {
+                    "description": "Issue body content",
+                    "type": "string"
+                },
+                "created_at": {
+                    "description": "Creation timestamp",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "List of labels",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "number": {
+                    "description": "Issue number",
+                    "type": "integer"
+                },
+                "state": {
+                    "description": "Issue state (open/closed)",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Issue title",
+                    "type": "string"
+                },
+                "updated_at": {
+                    "description": "Last update timestamp",
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

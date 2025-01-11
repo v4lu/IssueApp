@@ -14,15 +14,25 @@ type Repository struct {
 	PushedAt    time.Time `json:"pushed_at"`
 }
 
+// Issue represents a GitHub issue
+// @Description GitHub issue information
 type Issue struct {
-	Number    int       `json:"number"`
-	Title     string    `json:"title"`
-	Body      string    `json:"body"`
-	State     string    `json:"state"`
+	// Issue number
+	Number int `json:"number"`
+	// Issue title
+	Title string `json:"title"`
+	// Issue body content
+	Body string `json:"body"`
+	// Issue state (open/closed)
+	State string `json:"state"`
+	// Creation timestamp
 	CreatedAt time.Time `json:"created_at"`
+	// Last update timestamp
 	UpdatedAt time.Time `json:"updated_at"`
-	Assignees []string  `json:"assignees"`
-	Labels    []string  `json:"labels"`
+	// List of assignees
+	Assignees []string `json:"assignees"`
+	// List of labels
+	Labels []string `json:"labels"`
 }
 
 type Organization struct {

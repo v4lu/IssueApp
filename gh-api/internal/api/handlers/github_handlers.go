@@ -75,6 +75,22 @@ func (h *GithubHandler) GetIssues(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": issues})
 }
 
+// CreateIssue godoc
+// @Summary      Create a new issue
+// @Description  Creates a new issue in the specified repository
+// @Tags         issues
+// @Accept       json
+// @Produce      json
+// @Param        owner path string true "Repository owner"
+// @Param        repo path string true "Repository name"
+// @Param        issue body models.CreateIssueRequest true "Issue details"
+// @Success      201  {object}  models.Issue
+// @Failure      400  {object}  errors.AppError
+// @Failure      401  {object}  errors.AppError
+// @Failure      404  {object}  errors.AppError
+// @Failure      500  {object}  errors.AppError
+// @Security     BearerAuth
+// @Router       /repos/{owner}/{repo}/issues [post]
 func (h *GithubHandler) CreateIssue(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
