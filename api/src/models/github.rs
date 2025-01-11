@@ -53,20 +53,3 @@ pub struct UserEmail {
     pub verified: bool,
     pub visibility: Option<String>,
 }
-
-#[derive(serde::Deserialize)]
-pub struct CreateIssueRequest {
-    pub title: String,
-    pub body: Option<String>,
-    pub assignees: Option<Vec<String>>,
-    pub labels: Option<Vec<String>>,
-}
-
-#[derive(serde::Deserialize)]
-pub struct UpdateIssueRequest {
-    pub title: Option<String>,
-    pub body: Option<String>,
-    pub state: Option<octocrab::models::IssueState>,
-    pub assignees: Option<Vec<String>>,
-    pub labels: Option<Vec<String>>,
-}

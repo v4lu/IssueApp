@@ -4,7 +4,7 @@ use crate::{
     app_state::AppState,
     errors::CustomError,
     models::auth::{LoginRequest, RegisterRequest},
-    utils::{context::get_context_user_id, urls::extract_query_params_code},
+    utils::{context::get_context_user_id, urls::extract_query_params},
 };
 
 pub async fn register(
@@ -69,7 +69,7 @@ pub async fn github_callback(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomError> {
-    let code = extract_query_params_code(req, "code".into())?;
+    let code = extract_query_params(req, "code".into())?;
     let redirect_url = format!("{}?code={}", state.config.github_redirect_url, code);
 
     Ok(HttpResponse::Found()
@@ -81,7 +81,7 @@ pub async fn login_with_github(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomError> {
-    let code = extract_query_params_code(req, "code".into())?;
+    let code = extract_query_params(req, "code".into())?;
     let user_res = state.oauth_service.handle_github_callback(code).await?;
     Ok(HttpResponse::Ok().json(user_res))
 }
