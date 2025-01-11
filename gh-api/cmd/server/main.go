@@ -14,7 +14,7 @@ func main() {
 	githubService := services.NewGithubService()
 	githubHandler := handlers.NewGithubHandler(*githubService)
 
-	routes.GithubRoutes(r, *githubHandler)
+	routes.GithubRoutes(r, githubHandler)
 
 	if err := r.Run(":9001"); err != nil {
 		panic(err)

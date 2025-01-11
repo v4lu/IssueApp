@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/valu/github-apis/internal/errors"
 	"github.com/valu/github-apis/internal/models"
 	"github.com/valu/github-apis/internal/services"
 )
@@ -25,31 +26,68 @@ func (h *GithubHandler) GetRepositories(c *gin.Context) {
 
 	repos, err := h.githubService.GetOrgRepos(orgName, token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, repos)
 }
 
-func (h *GithubHandler) GetIssues(c *gin.Context) {
-	owner := c.Param("owner")
-	repo := c.Param("repo")
-	token := c.MustGet("github_token").(string)
-
-	issues, err := h.githubService.GetRepositoryIssues(token, owner, repo)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+func handleError(c *gin.Context, err error) {
+	if appErr, ok := err.(*errors.AppError); ok {
+		c.JSON(appErr.HTTPStatus, gin.H{
+			"error": gin.H{
+				"type":    appErr.Type,
+				"message": appErr.Message,
+			},
+		})
 		return
 	}
 
-	c.JSON(http.StatusOK, issues)
+	c.JSON(http.StatusInternalServerError, gin.H{
+		"error": gin.H{
+			"type":    errors.ErrorTypeInternal,
+			"message": "An unexpected error occurred",
+		},
+	})
+}
+
+func (h *GithubHandler) GetIssues(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	if owner == "" || repo == "" {
+		handleError(c, errors.NewValidationError("owner and repository name are required"))
+		return
+	}
+
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	issues, err := h.githubService.GetRepositoryIssues(token, owner, repo)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": issues})
 }
 
 func (h *GithubHandler) CreateIssue(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
-	token := c.MustGet("github_token").(string)
+	if owner == "" || repo == "" {
+		handleError(c, errors.NewValidationError("owner and repository name are required"))
+		return
+	}
+
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
 
 	var issueRequest struct {
 		Title     string   `json:"title" binding:"required"`
@@ -66,7 +104,7 @@ func (h *GithubHandler) CreateIssue(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&issueRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		handleError(c, errors.NewValidationError(err.Error()))
 		return
 	}
 
@@ -79,23 +117,36 @@ func (h *GithubHandler) CreateIssue(c *gin.Context) {
 		Labels:    issueRequest.Labels,
 	}
 
-	issue, err := h.githubService.CreateIssue(
-		token,
-		&request,
-	)
+	issue, err := h.githubService.CreateIssue(token, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusCreated, issue)
+	c.JSON(http.StatusCreated, gin.H{"data": issue})
 }
 
 func (h *GithubHandler) UpdateIssue(c *gin.Context) {
 	owner := c.Param("owner")
 	repo := c.Param("repo")
 	issueNumber := c.Param("number")
-	token := c.MustGet("github_token").(string)
+
+	if owner == "" || repo == "" {
+		handleError(c, errors.NewValidationError("owner and repository name are required"))
+		return
+	}
+
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	issueNum, err := strconv.ParseInt(issueNumber, 10, 64)
+	if err != nil {
+		handleError(c, errors.NewValidationError("invalid issue number"))
+		return
+	}
 
 	var updateRequest struct {
 		Title     string   `json:"title"`
@@ -113,58 +164,134 @@ func (h *GithubHandler) UpdateIssue(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	issueNum, err := strconv.ParseInt(issueNumber, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid issue number"})
+		handleError(c, errors.NewValidationError(err.Error()))
 		return
 	}
 
 	request := models.UpdateIssueRequest{
+		Owner:     owner,
+		RepoName:  repo,
+		IssueNum:  issueNum,
 		Title:     updateRequest.Title,
 		Body:      &updateRequest.Body,
 		State:     &updateRequest.State,
 		Assignees: updateRequest.Assignees,
 		Labels:    updateRequest.Labels,
-		Owner:     owner,
-		RepoName:  repo,
-		IssueNum:  issueNum,
 	}
-	issue, err := h.githubService.UpdateIssue(
-		token,
-		&request,
-	)
+
+	issue, err := h.githubService.UpdateIssue(token, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, issue)
+	c.JSON(http.StatusOK, gin.H{"data": issue})
+}
+
+func (h *GithubHandler) DeleteIssue(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	issueNumber := c.Param("number")
+
+	if owner == "" || repo == "" {
+		handleError(c, errors.NewValidationError("owner and repository name are required"))
+		return
+	}
+
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	issueNum, err := strconv.Atoi(issueNumber)
+	if err != nil {
+		handleError(c, errors.NewValidationError("invalid issue number"))
+		return
+	}
+
+	err = h.githubService.DeleteIssue(token, owner, repo, issueNum)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Issue deleted successfully"})
+}
+
+func (h *GithubHandler) GetIssueByNumber(c *gin.Context) {
+	owner := c.Param("owner")
+	repo := c.Param("repo")
+	issueNumber := c.Param("number")
+
+	if owner == "" || repo == "" {
+		handleError(c, errors.NewValidationError("owner and repository name are required"))
+		return
+	}
+
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	issueNum, err := strconv.Atoi(issueNumber)
+	if err != nil {
+		handleError(c, errors.NewValidationError("invalid issue number"))
+		return
+	}
+
+	issue, err := h.githubService.GetIssueByNumber(token, owner, repo, issueNum)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": issue})
 }
 
 func (h *GithubHandler) GetAccessibleRepos(c *gin.Context) {
-	token := c.MustGet("github_token").(string)
+	token, err := getGithubToken(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
 
 	repos, err := h.githubService.GetAccessibleRepos(token)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, repos)
+	c.JSON(http.StatusOK, gin.H{"data": repos})
 }
 
 func (h *GithubHandler) GetAuthorizedOrganizations(c *gin.Context) {
-	token := c.MustGet("github_token").(string)
-
-	orgs, err := h.githubService.GetAuthorizedOrganizations(token)
+	token, err := getGithubToken(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		handleError(c, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, orgs)
+	orgs, err := h.githubService.GetAuthorizedOrganizations(token)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": orgs})
+}
+
+func getGithubToken(c *gin.Context) (string, error) {
+	token, exists := c.Get("github_token")
+	if !exists {
+		return "", errors.NewAuthenticationError("GitHub token not found in context")
+	}
+
+	tokenStr, ok := token.(string)
+	if !ok {
+		return "", errors.NewAuthenticationError("Invalid GitHub token format")
+	}
+
+	return tokenStr, nil
 }

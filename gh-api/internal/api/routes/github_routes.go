@@ -6,22 +6,35 @@ import (
 	"github.com/valu/github-apis/internal/api/middlewares"
 )
 
-func GithubRoutes(r *gin.Engine, githubHandler handlers.GithubHandler) {
+func GithubRoutes(r *gin.Engine, githubHandler *handlers.GithubHandler) {
+	if r == nil {
+		panic("router cannot be nil")
+	}
+	if githubHandler == nil {
+		panic("githubHandler cannot be nil")
+	}
 
+	r.Use(gin.Recovery())
+	r.Use(middlewares.ErrorMiddleware())
 	r.Use(middlewares.AuthMiddleware())
 
-	orgs := r.Group("/orgs/:org")
+	v1 := r.Group("/v1")
 	{
-		orgs.GET("/repos", githubHandler.GetRepositories)
-	}
+		orgs := v1.Group("/orgs/:org")
+		{
+			orgs.GET("/repos", githubHandler.GetRepositories)
+		}
 
-	repos := r.Group("/repos/:owner/:repo")
-	{
-		repos.GET("/issues", githubHandler.GetIssues)
-		repos.POST("/issues", githubHandler.CreateIssue)
-		repos.PATCH("/issues/:number", githubHandler.UpdateIssue)
-	}
+		repos := v1.Group("/repos/:owner/:repo")
+		{
+			repos.GET("/issues", githubHandler.GetIssues)
+			repos.POST("/issues", githubHandler.CreateIssue)
+			repos.GET("/issues/:number", githubHandler.GetIssueByNumber)
+			repos.PATCH("/issues/:number", githubHandler.UpdateIssue)
+			repos.DELETE("/issues/:number", githubHandler.DeleteIssue)
+		}
 
-	r.GET("/repos", githubHandler.GetAccessibleRepos)
-	r.GET("/organizations", githubHandler.GetAuthorizedOrganizations)
+		v1.GET("/repos", githubHandler.GetAccessibleRepos)
+		v1.GET("/organizations", githubHandler.GetAuthorizedOrganizations)
+	}
 }
