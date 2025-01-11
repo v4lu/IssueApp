@@ -1,0 +1,149 @@
+basePath: /v1
+definitions:
+  errors.AppError:
+    properties:
+      httpstatus:
+        type: integer
+      message:
+        type: string
+      raw: {}
+      type:
+        $ref: '#/definitions/errors.ErrorType'
+    type: object
+  errors.ErrorType:
+    enum:
+    - VALIDATION_ERROR
+    - AUTHENTICATION_ERROR
+    - AUTHORIZATION_ERROR
+    - NOT_FOUND
+    - GITHUB_API_ERROR
+    - INTERNAL_ERROR
+    type: string
+    x-enum-varnames:
+    - ErrorTypeValidation
+    - ErrorTypeAuthentication
+    - ErrorTypeAuthorization
+    - ErrorTypeNotFound
+    - ErrorTypeGitHubAPI
+    - ErrorTypeInternal
+  models.CreateIssueRequest:
+    properties:
+      assignees:
+        items:
+          type: string
+        type: array
+      body:
+        type: string
+      labels:
+        items:
+          type: string
+        type: array
+      owner:
+        type: string
+      repoName:
+        type: string
+      title:
+        type: string
+    type: object
+  models.Issue:
+    description: GitHub issue information
+    properties:
+      assignees:
+        description: List of assignees
+        items:
+          type: string
+        type: array
+      body:
+        description: Issue body content
+        type: string
+      created_at:
+        description: Creation timestamp
+        type: string
+      labels:
+        description: List of labels
+        items:
+          type: string
+        type: array
+      number:
+        description: Issue number
+        type: integer
+      state:
+        description: Issue state (open/closed)
+        type: string
+      title:
+        description: Issue title
+        type: string
+      updated_at:
+        description: Last update timestamp
+        type: string
+    type: object
+host: localhost:9001
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: A REST API service for managing GitHub repositories and issues
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: GitHub APIs
+  version: "1.0"
+paths:
+  /repos/{owner}/{repo}/issues:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new issue in the specified repository
+      parameters:
+      - description: Repository owner
+        in: path
+        name: owner
+        required: true
+        type: string
+      - description: Repository name
+        in: path
+        name: repo
+        required: true
+        type: string
+      - description: Issue details
+        in: body
+        name: issue
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateIssueRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Issue'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/errors.AppError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/errors.AppError'
+      security:
+      - BearerAuth: []
+      summary: Create a new issue
+      tags:
+      - issues
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

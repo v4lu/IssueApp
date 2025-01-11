@@ -5,8 +5,6 @@ use uuid::Uuid;
 use validator::ValidationError;
 use validator_derive::Validate;
 
-use crate::models::comment::Comment;
-
 use super::comment::CommentResponse;
 // --- data models ---
 

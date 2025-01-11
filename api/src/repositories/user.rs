@@ -2,9 +2,8 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{
-    models::auth::{CreateGithubUser, CreateUserData, UpdateGithubUser, UpdateUserData, User},
-    repositories::user,
+use crate::models::auth::{
+    CreateGithubUser, CreateUserData, UpdateGithubUser, UpdateUserData, User,
 };
 
 pub struct UserRepository {

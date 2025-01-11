@@ -3,6 +3,7 @@
 ## Tech Stack
 
 - Rust
+- Golang
 - Actix-web
 - Sqlx
 - Postgres
