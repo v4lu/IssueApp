@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { getIcon } from '$lib';
 	import { type StatusIconName, useIssue } from '$lib/api/issue.svelte';
-	import { IssueColumnContainer } from '$lib/components/issue';
+	import { IssueColumnContainer, IssueNewViewContainer } from '$lib/components/issue';
 	import { DefaultWrapper } from '$lib/components/layout';
-	import { CreateIssue } from '$lib/components/modals';
 	import { Button } from '$lib/components/ui/button';
 	import { orgStore } from '$lib/stores/org.store';
 	import type { IssueResponse, IssueUpdate } from '$lib/types/issue.type.js';
+	import { CreateIssue } from '$lib/components/modals';
+	import { getIcon } from '$lib';
+
+	type SelectedView = 'table' | 'mail' | 'kanban';
 
 	let { data } = $props();
 	let isCreateIssueModalOpen = $state(false);
+	let selectedView = $state<SelectedView>('mail');
+
 	let draggedIssue = $state<IssueResponse | null>(null);
 	let dragOverStatus = $state<StatusIconName | null>(null);
 	let originalStatus = $state<StatusIconName | null>(null);
@@ -57,7 +61,9 @@
 </script>
 
 <DefaultWrapper>
-	<div class="flex w-full items-center justify-end border-b border-border p-2">
+	<div class="flex w-full items-center justify-end gap-4 border-b border-border p-2">
+		<button onclick={() => (selectedView = 'table')}>table view</button>
+		<button onclick={() => (selectedView = 'mail')}>mail view</button>
 		<Button
 			onclick={() => {
 				isCreateIssueModalOpen = true;
@@ -70,7 +76,7 @@
 			<div>Loading...</div>
 		{:else if resp.issues.length === 0}
 			<div>No issues found</div>
-		{:else}
+		{:else if selectedView === 'table'}
 			{#each resp.sortedStatusKeys as status}
 				{@const IconStatus = getIcon('status', status as StatusIconName)}
 				<IssueColumnContainer
@@ -91,6 +97,12 @@
 					onCreateSubIssue={createSubIssue}
 				/>
 			{/each}
+		{:else if selectedView === 'mail'}
+			<IssueNewViewContainer
+				org={$orgStore}
+				sortedStatusKeys={resp.sortedStatusKeys}
+				issues={resp.issues}
+			/>
 		{/if}
 	</div>
 </DefaultWrapper>
