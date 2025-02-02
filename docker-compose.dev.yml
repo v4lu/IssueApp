@@ -9,11 +9,15 @@ services:
       - '5432:5432'
     volumes:
       - ./data:/var/lib/postgresql/data
+    networks:
+      - dev
 
   cache:
     image: redis:alpine
     ports:
       - '6379:6379'
+    networks:
+      - dev
 
   gh-api:
     build:
@@ -21,6 +25,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - '9001:9001'
+    networks:
+      - dev
 
 volumes:
   data:
+
+networks:
+  dev:

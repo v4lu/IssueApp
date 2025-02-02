@@ -102,6 +102,9 @@
 				org={$orgStore}
 				sortedStatusKeys={resp.sortedStatusKeys}
 				issues={resp.issues}
+				addComment={createComment}
+				{deleteIssue}
+				{updateIssue}
 			/>
 		{/if}
 	</div>

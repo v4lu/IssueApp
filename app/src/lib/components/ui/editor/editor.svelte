@@ -239,7 +239,7 @@
 		@apply w-full table-auto border-collapse;
 	}
 	:global(.ProseMirror td, .ProseMirror th) {
-		@apply relative min-w-[100px] border border-gray-300 p-2;
+		@apply relative min-w-[100px] border border-border p-2;
 	}
 	:global(.ProseMirror ul) {
 		@apply list-disc pl-5;

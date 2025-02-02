@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { cn } from '$lib';
 	import { Header, SettingsSidebar } from '$lib/components/layout/index.js';
 	import { CreateOrg } from '$lib/components/modals';
 	import { orgStore, orgsStore } from '$lib/stores/org.store.js';
@@ -14,10 +15,15 @@
 		orgsStore.setOrgs(data.orgs);
 	}
 	let showSettingsSidebar = $derived(data.path.startsWith('/settings'));
+	let showRightSidebar = $derived(data.path.startsWith('/docs'));
 </script>
 
 <Header authToken={data.accessToken} />
-<div class="grid h-[calc(100dvh-75px)] flex-1 bg-background-muted lg:grid-cols-[250px,1fr]">
+<div
+	class={cn('grid h-full flex-1 bg-background-muted lg:grid-cols-[250px,1fr]', {
+		'lg:grid-cols-[250px,1fr,450px]': showRightSidebar
+	})}
+>
 	{#if showSettingsSidebar}
 		<SettingsSidebar path={data.path} />
 	{:else}

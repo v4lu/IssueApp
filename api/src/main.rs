@@ -15,6 +15,7 @@ use sqlx::PgPool;
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     setup_logger();
+
     let cfg =
         config::Config::new().map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
 
