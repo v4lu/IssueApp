@@ -1,6 +1,6 @@
 use std::env;
 
-use crate::errors::CustomError;
+use crate::{errors::CustomError, utils::env::load_dotenv};
 
 #[derive(Clone, Debug)]
 pub struct Config {
@@ -14,7 +14,8 @@ pub struct Config {
 
 impl Config {
     pub fn new() -> Result<Self, CustomError> {
-        dotenv::dotenv().ok();
+        load_dotenv()
+            .map_err(|_| CustomError::ConfigError("Failed to load .env file".to_string()))?;
 
         let port = env::var("PORT")
             .map_err(|_| CustomError::ConfigError("PORT environment variable not set".to_string()))?
