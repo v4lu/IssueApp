@@ -14,7 +14,7 @@ use crate::{
     repositories::{user::UserRepository, user_preferences::UserPreferencesRepository},
 };
 use argon2::{
-    password_hash::{PasswordHasher, SaltString},
+    password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
     Argon2, PasswordHash, PasswordVerifier,
 };
 
@@ -52,7 +52,7 @@ impl AuthService {
             ));
         }
 
-        let salt = SaltString::generate(&mut rand::thread_rng());
+        let salt = SaltString::generate(&mut OsRng);
         let argon2 = Argon2::default();
         let password_hash = argon2
             .hash_password(request.password.as_bytes(), &salt)
@@ -98,17 +98,16 @@ impl AuthService {
         )
         .map_err(|_| CustomError::InvalidCredentials)?;
 
-        if let Err(_) = argon2
+        if argon2
             .verify_password(request.password.as_bytes(), &parsed_hash)
             .map_err(|_| CustomError::InvalidCredentials)
+            .is_err()
         {
             return Err(CustomError::InvalidCredentials);
         }
 
-        let (access_token, refresh_token, access_token_exp, refresh_token_exp) = self
-            .token_service
-            .generate_token_pair(user.id.clone())
-            .await?;
+        let (access_token, refresh_token, access_token_exp, refresh_token_exp) =
+            self.token_service.generate_token_pair(user.id).await?;
 
         self.user_repo
             .update_user_last_login(user.id)
@@ -129,7 +128,7 @@ impl AuthService {
     pub async fn refresh_token(&self, refresh_token: &str) -> Result<LoginResponse, CustomError> {
         let user_id_str = self
             .token_service
-            .verify_refresh_token(&refresh_token)
+            .verify_refresh_token(refresh_token)
             .await?;
 
         let user_id = Uuid::parse_str(&user_id_str)

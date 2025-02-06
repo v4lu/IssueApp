@@ -1,5 +1,4 @@
 use futures::TryFutureExt;
-use rand::Rng;
 use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
@@ -16,6 +15,7 @@ use crate::{
     repositories::{
         org::OrgRepository, user::UserRepository, user_preferences::UserPreferencesRepository,
     },
+    utils::random::gen_range,
 };
 
 pub struct OrgService {
@@ -288,7 +288,7 @@ impl OrgService {
             .join("-");
 
         for _ in 0..10 {
-            let random_numbers: u32 = rand::thread_rng().gen_range(100..1000);
+            let random_numbers = gen_range(100, 1000);
             let new_slug = format!("{}-{}", base_slug, random_numbers);
 
             if self

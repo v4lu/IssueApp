@@ -1,11 +1,9 @@
+use super::auth::User;
 use chrono::{DateTime, Utc};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use validator::ValidationError;
-use validator_derive::Validate;
-
-use super::auth::User;
+use validator::{Validate, ValidationError};
 
 // --- data models ---
 
@@ -122,8 +120,8 @@ fn validate_logo_url(url: &str) -> Result<(), validator::ValidationError> {
 }
 
 fn validate_email(email: &str) -> Result<(), validator::ValidationError> {
-    let email_rgx = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
-    if !email_rgx.is_match(email) {
+    let re = Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").unwrap();
+    if !re.is_match(email) {
         return Err(ValidationError::new("email must be a valid email address"));
     }
     Ok(())

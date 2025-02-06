@@ -53,3 +53,20 @@ pub struct UserEmail {
     pub verified: bool,
     pub visibility: Option<String>,
 }
+
+#[derive(Debug, serde::Deserialize)]
+pub struct GithubUser {
+    pub id: u64,
+    pub login: String,
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub avatar_url: String,
+    pub html_url: String,
+}
+
+#[derive(serde::Deserialize)]
+pub struct GithubEmail {
+    pub email: String,
+    pub primary: bool,
+    pub verified: bool,
+}

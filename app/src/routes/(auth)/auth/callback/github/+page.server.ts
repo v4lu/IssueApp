@@ -2,14 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { api } from '$lib/api';
 import { ACCESS_TOKEN, REFRESH_TOKEN, isProduction } from '$lib/constants';
-
-type LoginResponse = {
-	access_token: string;
-	refresh_token: string;
-
-	expires_in_refresh: number;
-	expires_in_access: number;
-};
+import type { LoginResponse } from '$lib/types/user.type';
 
 export const load: PageServerLoad = async ({ url, cookies }) => {
 	const code = url.searchParams.get('code');
@@ -22,21 +15,23 @@ export const load: PageServerLoad = async ({ url, cookies }) => {
 
 	const response = await api.get(`auth/oauth/github/login?code=${code}`).json<LoginResponse>();
 
-	const { access_token, refresh_token, expires_in_refresh, expires_in_access } = response;
+	const { access_token, refresh_token, access_token_expiration, refresh_token_expiration } =
+		response;
+	console.log(response);
 
 	cookies.set(ACCESS_TOKEN, access_token, {
 		httpOnly: true,
 		secure: isProduction,
 		sameSite: 'strict',
 		path: '/',
-		maxAge: expires_in_access
+		maxAge: access_token_expiration
 	});
 	cookies.set(REFRESH_TOKEN, refresh_token, {
 		httpOnly: true,
 		secure: isProduction,
 		sameSite: 'strict',
 		path: '/',
-		maxAge: expires_in_refresh
+		maxAge: refresh_token_expiration
 	});
 
 	redirect(307, '/');

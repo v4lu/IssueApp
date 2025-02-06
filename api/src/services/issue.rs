@@ -42,12 +42,12 @@ impl IssueService {
             .await
             .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
 
-        return Ok(IssueResponse {
-            issue_id: issue.id.clone(),
+        Ok(IssueResponse {
+            issue_id: issue.id,
             issue,
             sub_issues: None,
             comments: None,
-        });
+        })
     }
 
     pub async fn get_issue(&self, id: Uuid) -> Result<IssueResponse, CustomError> {
@@ -70,7 +70,7 @@ impl IssueService {
 
         let comments = self
             .comment_repo
-            .get_comments_by_owner_id(issue.id.clone())
+            .get_comments_by_owner_id(issue.id)
             .await
             .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
 
@@ -134,7 +134,7 @@ impl IssueService {
 
         let comments = self
             .comment_repo
-            .get_comments_by_owner_id(issue.id.clone())
+            .get_comments_by_owner_id(issue.id)
             .await
             .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
 
@@ -173,13 +173,13 @@ impl IssueService {
         for issue in issues? {
             let sub_issues = self
                 .issue_repo
-                .get_sub_issues(issue.id.clone())
+                .get_sub_issues(issue.id)
                 .await
                 .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
 
             let comments = self
                 .comment_repo
-                .get_comments_by_owner_id(issue.id.clone())
+                .get_comments_by_owner_id(issue.id)
                 .await
                 .map_err(|e| CustomError::DatabaseError(e.to_string()))?;
 
@@ -199,7 +199,7 @@ impl IssueService {
             }
 
             issue_responses.push(IssueResponse {
-                issue_id: issue.id.clone(),
+                issue_id: issue.id,
                 issue,
                 comments: Some(comments_response),
                 sub_issues: Some(sub_issues),

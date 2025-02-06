@@ -23,3 +23,10 @@ export type UserPreference = {
 	created_at: string;
 	updated_at: string;
 };
+
+export type LoginResponse = {
+	access_token: string;
+	refresh_token: string;
+	access_token_expiration: number;
+	refresh_token_expiration: number;
+};

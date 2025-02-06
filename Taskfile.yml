@@ -1,0 +1,7 @@
+version: "3"
+
+tasks:
+  dev-containers:
+    cmds:
+      - docker compose -f docker-compose.dev.yml up -d
+    silent: true

@@ -20,7 +20,6 @@
 	import TextStyle from '@tiptap/extension-text-style';
 	import Color from '@tiptap/extension-color';
 	import FontFamily from '@tiptap/extension-font-family';
-
 	import Mention from '@tiptap/extension-mention';
 
 	import { common, createLowlight } from 'lowlight';
@@ -29,7 +28,6 @@
 	import { DefaultWrapper } from '$lib/components/layout';
 	import { cn } from '$lib';
 	import { Input } from '$lib/components/ui/input';
-	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 
 	const lowlight = createLowlight(common);
@@ -42,8 +40,7 @@
 	let linkUrl = $state('');
 	let title = $state('');
 
-	let tags = $state<string[]>([]);
-	let activeView = $state<'tags' | 'ai'>('tags');
+	let activeView = $state<'ai'>('ai');
 	let messages = $state<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
 	let userInput = $state('');
 
@@ -56,8 +53,6 @@
 	function sendMessage() {
 		if (userInput.trim()) {
 			messages = [...messages, { role: 'user', content: userInput }];
-			// Here you would typically make an API call to your AI service
-			// For now, we'll just add a mock response
 			setTimeout(() => {
 				messages = [
 					...messages,
@@ -70,29 +65,6 @@
 			userInput = '';
 		}
 	}
-
-	function handleTagInput(event: KeyboardEvent) {
-		if (event.key === 'Enter' && event.target && (event.target as HTMLInputElement).value) {
-			tags = [...tags, (event.target as HTMLInputElement).value.trim()];
-			if (event.target) {
-				(event.target as HTMLInputElement).value = '';
-			}
-		}
-	}
-
-	function removeTag(tagToRemove: string) {
-		tags = tags.filter((tag) => tag !== tagToRemove);
-	}
-
-	let content = $state({
-		type: 'doc',
-		content: [
-			{
-				type: 'paragraph',
-				content: [{ type: 'text', text: '' }]
-			}
-		]
-	});
 
 	const toolbarGroups = [
 		{
@@ -131,8 +103,8 @@
 				{
 					icon: 'lucide:underline',
 					title: 'Underline',
-					action: () => editor?.chain().focus().toggleStrike().run(), // Should be toggleUnderline
-					isActive: () => editor?.isActive('strike') ?? false // Should be 'underline'
+					action: () => editor?.chain().focus().toggleStrike().run(),
+					isActive: () => editor?.isActive('strike') ?? false
 				},
 				{
 					icon: 'lucide:highlighter',
@@ -321,12 +293,10 @@
 					FontFamily,
 					Mention,
 					Color.configure({
-						types: ['textStyle'],
-						defaultColor: 'inherit'
+						types: ['textStyle']
 					}),
 					TextStyle
 				],
-				content,
 				editorProps: {
 					attributes: {
 						class: 'focus:outline-none max-w-full'
@@ -439,17 +409,6 @@
 		<button
 			class={cn(
 				'px-4 py-2 text-sm transition-colors',
-				activeView === 'tags'
-					? 'border-b-2 border-primary font-medium'
-					: 'text-muted-foreground hover:text-foreground'
-			)}
-			onclick={() => (activeView = 'tags')}
-		>
-			Tags
-		</button>
-		<button
-			class={cn(
-				'px-4 py-2 text-sm transition-colors',
 				activeView === 'ai'
 					? 'border-b-2 border-primary font-medium'
 					: 'text-muted-foreground hover:text-foreground'
@@ -459,71 +418,40 @@
 			AI Chat
 		</button>
 	</div>
+	<div class="space-y-4">
+		<div class="mb-4 space-y-2">
+			<h3 class="font-medium text-foreground">AI Assistant</h3>
+			<p class="text-sm text-muted-foreground">Ask questions about your content</p>
+		</div>
 
-	{#if activeView === 'tags'}
-		<!-- Tags View -->
 		<div class="space-y-4">
-			<div class="mb-4 space-y-2">
-				<h3 class="font-medium text-foreground">Tags</h3>
-				<p class="text-sm text-muted-foreground">Add tags to organize your content</p>
-			</div>
-
-			<div class="mb-3">
-				<Input
-					type="text"
-					placeholder="Type tag and press Enter..."
-					class="h-9 w-full text-sm placeholder:text-sm"
-					onkeydown={handleTagInput}
-				/>
-			</div>
-
-			<div class="flex flex-wrap gap-2">
-				{#each tags as tag}
-					<Badge class="px-2 py-1.5 text-sm transition-opacity hover:opacity-100">
-						{tag}
-					</Badge>
+			<div
+				class="scrollbar-hidden h-[78dvh] max-h-[78dvh] space-y-4 overflow-y-auto rounded-lg border border-border p-4"
+			>
+				{#each messages as message}
+					<div
+						class={cn(
+							'flex gap-2 rounded-lg p-3',
+							message.role === 'user' ? 'bg-muted' : 'bg-muted/50'
+						)}
+					>
+						<span class="text-sm">{message.content}</span>
+					</div>
 				{/each}
 			</div>
-		</div>
-	{:else}
-		<!-- AI Chat View -->
-		<div class="space-y-4">
-			<div class="mb-4 space-y-2">
-				<h3 class="font-medium text-foreground">AI Assistant</h3>
-				<p class="text-sm text-muted-foreground">Ask questions about your content</p>
-			</div>
 
-			<div class="space-y-4">
-				<!-- Chat Messages -->
-				<div
-					class="scrollbar-hidden h-[78dvh] max-h-[78dvh] space-y-4 overflow-y-auto rounded-lg border border-border p-4"
-				>
-					{#each messages as message}
-						<div
-							class={cn(
-								'flex gap-2 rounded-lg p-3',
-								message.role === 'user' ? 'bg-muted' : 'bg-muted/50'
-							)}
-						>
-							<span class="text-sm">{message.content}</span>
-						</div>
-					{/each}
-				</div>
-
-				<!-- Input Area -->
-				<div class="flex gap-2">
-					<Input
-						type="text"
-						placeholder="Ask a question..."
-						class="h-9 text-sm"
-						bind:value={userInput}
-						onkeydown={handleChatInput}
-					/>
-					<Button class="h-9" onclick={sendMessage}>Send</Button>
-				</div>
+			<div class="flex gap-2">
+				<Input
+					type="text"
+					placeholder="Ask a question..."
+					class="h-9 text-sm"
+					bind:value={userInput}
+					onkeydown={handleChatInput}
+				/>
+				<Button class="h-9" onclick={sendMessage}>Send</Button>
 			</div>
 		</div>
-	{/if}
+	</div>
 </div>
 
 {#if showLinkMenu}

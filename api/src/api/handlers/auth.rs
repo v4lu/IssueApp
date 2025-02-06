@@ -1,4 +1,5 @@
 use actix_web::{web, HttpRequest, HttpResponse};
+use serde_json::json;
 
 use crate::{
     app_state::AppState,
@@ -55,23 +56,18 @@ pub async fn session(
 
     Ok(HttpResponse::Ok().json(session))
 }
-#[derive(serde::Serialize)]
-struct GhResponse {
-    url: reqwest::Url,
-}
 
 pub async fn init_github(state: web::Data<AppState>) -> Result<HttpResponse, CustomError> {
     let gh_url = state.oauth_service.init_github_link().await;
-    Ok(HttpResponse::Ok().json(GhResponse { url: gh_url }))
+    Ok(HttpResponse::Ok().json(json!({ "url": gh_url })))
 }
 
 pub async fn github_callback(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomError> {
-    let code = extract_query_params(req, "code".into())?;
+    let code = extract_query_params(req, "code")?;
     let redirect_url = format!("{}?code={}", state.config.github_redirect_url, code);
-
     Ok(HttpResponse::Found()
         .append_header(("Location", redirect_url))
         .finish())
@@ -81,7 +77,7 @@ pub async fn login_with_github(
     req: HttpRequest,
     state: web::Data<AppState>,
 ) -> Result<HttpResponse, CustomError> {
-    let code = extract_query_params(req, "code".into())?;
+    let code = extract_query_params(req, "code")?;
     let user_res = state.oauth_service.handle_github_callback(code).await?;
     Ok(HttpResponse::Ok().json(user_res))
 }

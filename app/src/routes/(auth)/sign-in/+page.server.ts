@@ -6,14 +6,7 @@ import type { Action } from './$types';
 import { type UserLoginSchemaPayload, userLoginSchema } from '$lib/validators/auth.validator.js';
 import { ACCESS_TOKEN, REFRESH_TOKEN, isProduction } from '$lib/constants.js';
 import { api } from '$lib/api.js';
-
-type LoginResponse = {
-	access_token: string;
-	refresh_token: string;
-
-	expires_in_refresh: number;
-	expires_in_access: number;
-};
+import type { LoginResponse } from '$lib/types/user.type';
 
 export async function load() {
 	const form = await superValidate(zod(userLoginSchema));
@@ -43,21 +36,22 @@ export const actions = {
 				})
 				.json();
 
-			const { access_token, refresh_token, expires_in_refresh, expires_in_access } = res;
+			const { access_token, refresh_token, access_token_expiration, refresh_token_expiration } =
+				res;
 
 			cookies.set(ACCESS_TOKEN, access_token, {
 				httpOnly: true,
 				secure: isProduction,
 				sameSite: 'strict',
 				path: '/',
-				maxAge: expires_in_access
+				maxAge: access_token_expiration
 			});
 			cookies.set(REFRESH_TOKEN, refresh_token, {
 				httpOnly: true,
 				secure: isProduction,
 				sameSite: 'strict',
 				path: '/',
-				maxAge: expires_in_refresh
+				maxAge: refresh_token_expiration
 			});
 
 			redirect(307, '/');

@@ -20,7 +20,7 @@
 
 <Header authToken={data.accessToken} />
 <div
-	class={cn('grid h-full flex-1 bg-background-muted lg:grid-cols-[250px,1fr]', {
+	class={cn('grid h-[calc(100dvh-64px)] flex-1 bg-background-muted lg:grid-cols-[250px,1fr]', {
 		'lg:grid-cols-[250px,1fr,450px]': showRightSidebar
 	})}
 >

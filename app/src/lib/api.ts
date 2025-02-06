@@ -1,6 +1,7 @@
-import { browser } from '$app/environment';
 import ky, { type KyInstance } from 'ky';
 import { CLIENT_BASE_URL, SERVER_BASE_URL } from './constants';
+import type { LoginResponse } from './types/user.type';
+import { browser } from '$app/environment';
 
 function getBaseUrl(): string {
 	return browser ? CLIENT_BASE_URL : SERVER_BASE_URL;
@@ -24,16 +25,9 @@ export function authAPI(authToken: string): KyInstance {
 	});
 }
 
-type RefreshResponse = {
-	access_token: string;
-	refresh_token: string;
-	expires_in_refresh: number;
-	expires_in_access: number;
-};
-
-export async function refreshToken(refresh_token: string): Promise<RefreshResponse> {
+export async function refreshToken(refresh_token: string): Promise<LoginResponse> {
 	return await api
-		.post<RefreshResponse>('auth/refresh', {
+		.post<LoginResponse>('auth/refresh', {
 			headers: {
 				RefreshTokenX: refresh_token
 			}

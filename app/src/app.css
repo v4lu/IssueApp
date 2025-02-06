@@ -6,6 +6,7 @@ html,
 body,
 :root {
 	font-family: 'Inter Variable', sans-serif;
+	height: 100dvh;
 }
 
 @layer base {
@@ -59,7 +60,7 @@ body,
 
 @layer base {
 	body {
-		@apply bg-background text-foreground;
+		@apply h-[100dvh] bg-background text-foreground;
 	}
 }
 

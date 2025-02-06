@@ -2,8 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
-use validator::ValidationError;
-use validator_derive::Validate;
+use validator::{Validate, ValidationError};
 
 use super::comment::CommentResponse;
 // --- data models ---

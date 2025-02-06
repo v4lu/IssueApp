@@ -1,12 +1,11 @@
+use crate::errors::CustomError;
+use chrono::{Duration, Utc};
 use rusty_paseto::prelude::*;
 use serde_json::Value;
 use std::convert::TryFrom;
-use time::{Duration, OffsetDateTime};
 use uuid::Uuid;
 
-use crate::errors::CustomError;
-
-const ACCESS_TOKEN_EXPIRATION: i64 = 15; // 15 minutes
+const ACCESS_TOKEN_EXPIRATION: i64 = 60; // 60 minutes
 const REFRESH_TOKEN_EXPIRATION: i64 = 7 * 24 * 60; // 7 days in minutes
 
 pub struct TokenService {
@@ -24,12 +23,8 @@ impl TokenService {
         &self,
         user_id: Uuid,
     ) -> Result<(String, String, i64, i64), CustomError> {
-        let now = OffsetDateTime::now_utc();
-
-        let access_exp = (now + Duration::minutes(ACCESS_TOKEN_EXPIRATION))
-            .format(&time::format_description::well_known::Rfc3339)
-            .map_err(|_| CustomError::InternalServerError)?;
-
+        let now = Utc::now();
+        let access_exp = now + Duration::minutes(ACCESS_TOKEN_EXPIRATION);
         let token_id = Uuid::new_v4().to_string();
         let user_id_str = user_id.to_string();
 
@@ -37,7 +32,7 @@ impl TokenService {
             .set_claim(SubjectClaim::from(user_id_str.as_str()))
             .set_claim(TokenIdentifierClaim::from(token_id.as_str()))
             .set_claim(
-                ExpirationClaim::try_from(access_exp.as_str())
+                ExpirationClaim::try_from(access_exp.to_rfc3339().as_str())
                     .map_err(|_| CustomError::InternalServerError)?,
             )
             .set_claim(
@@ -47,17 +42,14 @@ impl TokenService {
             .build(&self.key)
             .map_err(|_| CustomError::InternalServerError)?;
 
-        let refresh_exp = (now + Duration::minutes(REFRESH_TOKEN_EXPIRATION))
-            .format(&time::format_description::well_known::Rfc3339)
-            .map_err(|_| CustomError::InternalServerError)?;
-
-        let user_id_str = user_id.to_string();
+        let refresh_exp = now + Duration::minutes(REFRESH_TOKEN_EXPIRATION);
         let refresh_token_id = Uuid::new_v4().to_string();
+
         let refresh_token = PasetoBuilder::<V4, Local>::default()
             .set_claim(SubjectClaim::from(user_id_str.as_str()))
             .set_claim(TokenIdentifierClaim::from(refresh_token_id.as_str()))
             .set_claim(
-                ExpirationClaim::try_from(refresh_exp.as_str())
+                ExpirationClaim::try_from(refresh_exp.to_rfc3339().as_str())
                     .map_err(|_| CustomError::InternalServerError)?,
             )
             .set_claim(
@@ -104,7 +96,6 @@ impl TokenService {
 
     pub async fn extract_user_id(&self, token: &str) -> Result<Uuid, CustomError> {
         let claims = self.verify_access_token(token).await?;
-
         let user_id_str = claims["sub"]
             .as_str()
             .ok_or(CustomError::InvalidToken("Missing sub claim".to_string()))?;
