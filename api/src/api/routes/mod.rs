@@ -5,6 +5,7 @@ mod comment;
 mod issue;
 mod org;
 mod user_preferences;
+mod docs;
 
 pub fn configure_routes(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -13,6 +14,7 @@ pub fn configure_routes(cfg: &mut web::ServiceConfig) {
             .configure(org::configure_organization_routes)
             .configure(issue::configure_issue_routes)
             .configure(user_preferences::configure_user_preferences_routes)
+            .configure(docs::configure_docs_routes)
             .configure(comment::configure_comment_routes),
     );
 }

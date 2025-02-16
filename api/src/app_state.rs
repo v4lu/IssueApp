@@ -5,8 +5,7 @@ use sqlx::PgPool;
 use crate::{
     config::Config,
     services::{
-        auth::AuthService, comment::CommentService, issue::IssueService, oauth::OauthService,
-        org::OrgService, token::TokenService, user_preferences::UserPreferencesService,
+        auth::AuthService, comment::CommentService, docs::DocService, issue::IssueService, oauth::OauthService, org::OrgService, token::TokenService, user::UserService, user_preferences::UserPreferencesService
     },
 };
 
@@ -19,18 +18,22 @@ pub struct AppState {
     pub user_preferences_service: Arc<UserPreferencesService>,
     pub comment_service: Arc<CommentService>,
     pub oauth_service: Arc<OauthService>,
+    pub user_service: Arc<UserService>,
+    pub doc_service: Arc<DocService>,
     pub config: Config,
 }
 
 impl AppState {
     pub async fn new(pool: PgPool, config: &Config) -> Result<Self, Box<dyn std::error::Error>> {
-        let token_service = Arc::new(TokenService::new().unwrap());
+        let token_service = Arc::new(TokenService::new()?);
 
         let oauth_service = Arc::new(OauthService::new(
             pool.clone(),
-            &config,
+            config,
             token_service.clone(),
         )?);
+
+        let user_service = Arc::new(UserService::new(pool.clone()));
 
         Ok(AppState {
             token_service: token_service.clone(),
@@ -41,6 +44,8 @@ impl AppState {
             comment_service: Arc::new(CommentService::new(pool.clone())),
             oauth_service,
             config: config.clone(),
+            doc_service: Arc::new(DocService::new(user_service.clone(), pool.clone())),
+            user_service,
         })
     }
 }

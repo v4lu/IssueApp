@@ -1,3 +1,4 @@
+pub mod docs;
 pub mod auth;
 pub mod comment;
 pub mod context;

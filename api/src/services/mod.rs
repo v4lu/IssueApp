@@ -5,3 +5,5 @@ pub mod oauth;
 pub mod org;
 pub mod token;
 pub mod user_preferences;
+pub mod docs;
+pub mod user;

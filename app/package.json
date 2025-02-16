@@ -44,7 +44,7 @@
 		"@tiptap/extension-color": "^2.11.5",
 		"@tiptap/extension-font-family": "^2.11.5",
 		"@tiptap/extension-highlight": "^2.11.5",
-		"@tiptap/extension-image": "^2.7.4",
+		"@tiptap/extension-image": "^2.10.4",
 		"@tiptap/extension-link": "^2.11.5",
 		"@tiptap/extension-mention": "^2.11.5",
 		"@tiptap/extension-placeholder": "^2.7.4",
@@ -67,6 +67,8 @@
 		"ky": "^1.7.4",
 		"lowlight": "^3.3.0",
 		"mode-watcher": "^0.5.0",
-		"tailwind-merge": "^2.6.0"
+		"re-resizable": "^6.10.3",
+		"tailwind-merge": "^2.6.0",
+		"tiptap-extension-resize-image": "^1.2.1"
 	}
 }

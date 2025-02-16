@@ -21,6 +21,7 @@
 	import Color from '@tiptap/extension-color';
 	import FontFamily from '@tiptap/extension-font-family';
 	import Mention from '@tiptap/extension-mention';
+	import ImageResize from 'tiptap-extension-resize-image';
 
 	import { common, createLowlight } from 'lowlight';
 	import js from 'highlight.js/lib/languages/javascript';
@@ -31,14 +32,19 @@
 	const lowlight = createLowlight(common);
 	lowlight.register('js', js);
 
-	let editor = $state<Editor | null>(null);
+	type Props = {
+		editor: Editor | null;
+		title: string;
+	};
+
+	let { editor = $bindable(), title = $bindable() }: Props = $props();
+
 	let showSlashMenu = $state(false);
 	let slashMenuPosition = $state({ x: 0, y: 0 });
 	let showFloatingToolbar = $state(false);
 	let floatingToolbarPosition = $state({ x: 0, y: 0 });
 	let showLinkMenu = $state(false);
 	let linkUrl = $state('');
-	let title = $state('');
 	let uploadedFile: File | null = $state(null);
 	let imageUrl: string | null = $state(null);
 	let showColorPicker = $state(false);
@@ -237,7 +243,16 @@
 							levels: [1, 2, 3]
 						}
 					}),
-					Image,
+					Image.configure({
+						HTMLAttributes: {
+							style: 'max-width: 300px; height: auto;'
+						}
+					}),
+					ImageResize.configure({
+						HTMLAttributes: {
+							style: 'max-width: 300px; height: auto;'
+						}
+					}),
 					Underline,
 					Placeholder.configure({
 						placeholder: 'Type / for commands...'
@@ -310,6 +325,13 @@
 				}
 
 				const { from, to } = selection;
+				const selectedNode = editor.state.doc.nodeAt(from);
+
+				if (selectedNode?.type.name === 'image') {
+					showFloatingToolbar = false;
+					return;
+				}
+
 				const start = editor.view.coordsAtPos(from);
 				const end = editor.view.coordsAtPos(to);
 				const editorRect = editor.view.dom.getBoundingClientRect();
@@ -514,10 +536,6 @@
 		@apply bg-background-muted text-left font-bold;
 	}
 
-	:global(.ProseMirror img) {
-		@apply h-auto max-w-full;
-	}
-
 	:global(.ProseMirror ul) {
 		@apply my-4 list-disc pl-5;
 	}
@@ -540,6 +558,12 @@
 
 	:global(.ProseMirror p) {
 		@apply text-base leading-relaxed text-foreground;
+	}
+
+	:global(.ProseMirror img) {
+		max-width: 100%;
+		height: auto;
+		display: block;
 	}
 
 	:global(.ProseMirror blockquote) {

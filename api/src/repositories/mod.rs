@@ -1,5 +1,6 @@
 pub mod auth_token;
 pub mod comment;
+pub mod docs;
 pub mod issue;
 pub mod org;
 pub mod user;
